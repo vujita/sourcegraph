@@ -22,10 +22,4 @@ var (
 	ExternalAccounts = &userExternalAccounts{}
 
 	OrgInvitations = &orgInvitations{}
-
-	// GlobalDeps is a stub implementation of a global dependency index
-	GlobalDeps GlobalDepsProvider = &globalDeps{}
-
-	// Pkgs is a stub implementation of a global package metadata index
-	Pkgs PkgsProvider = &pkgs{}
 )
