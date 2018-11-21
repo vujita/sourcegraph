@@ -77,7 +77,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.1
 	github.com/neelance/parallel v0.0.0-20160708114440-4de9ce63d14c
-	github.com/opentracing-contrib/go-stdlib v0.0.0-20180702182724-07a764486eb1
+	github.com/opentracing-contrib/go-stdlib v0.0.0-20181121162553-c9628a4f0148
 	github.com/opentracing/basictracer-go v1.0.0
 	github.com/opentracing/opentracing-go v1.0.2
 	github.com/pelletier/go-toml v1.2.0
