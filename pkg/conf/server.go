@@ -1,28 +1,27 @@
 package conf
 
 import (
+	"context"
 	"log"
 	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sourcegraph/jsonx"
-	"github.com/sourcegraph/sourcegraph/pkg/conf/parse"
-	"github.com/sourcegraph/sourcegraph/schema"
+	"github.com/sourcegraph/sourcegraph/pkg/conf/conftypes"
 )
 
 // ConfigurationSource provides direct access to read and write to the
 // "raw" configuration.
 type ConfigurationSource interface {
-	Write(data string) error
-	Read() (string, error)
-	FilePath() string
+	// Write updates the configuration. The Deployment field is ignored.
+	Write(ctx context.Context, data conftypes.RawUnified) error
+	Read(ctx context.Context) (conftypes.RawUnified, error)
 }
 
 // Server provides access and manages modifications to the site configuration.
 type Server struct {
-	source ConfigurationSource
+	Source ConfigurationSource
 
 	store *Store
 
@@ -44,28 +43,29 @@ type Server struct {
 func NewServer(source ConfigurationSource) *Server {
 	fileWrite := make(chan chan struct{}, 1)
 	return &Server{
-		source:    source,
+		Source:    source,
 		store:     NewStore(),
 		fileWrite: fileWrite,
 	}
 }
 
 // Raw returns the raw text of the configuration file.
-func (s *Server) Raw() string {
+func (s *Server) Raw() conftypes.RawUnified {
 	return s.store.Raw()
 }
 
 // Write writes the JSON config file to the config file's path. If the JSON configuration is
 // invalid, an error is returned.
-func (s *Server) Write(input string) error {
+func (s *Server) Write(input conftypes.RawUnified) error {
+	ctx := context.Background() // TODO(slimsag)
 	// Parse the configuration so that we can diff it (this also validates it
 	// is proper JSON).
-	_, err := parse.ParseConfigEnvironment(input)
+	_, err := ParseConfig(input)
 	if err != nil {
 		return err
 	}
 
-	err = s.source.Write(input)
+	err = s.Source.Write(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -80,6 +80,8 @@ func (s *Server) Write(input string) error {
 	return nil
 }
 
+// TODO(slimsag): Unified
+/*
 // Edit invokes the provided function to compute edits to the site
 // configuration. It then applies and writes them.
 //
@@ -94,7 +96,7 @@ func (s *Server) Edit(computeEdits func(current *schema.SiteConfiguration, raw s
 	raw := s.store.Raw()
 
 	// Compute edits.
-	edits, err := computeEdits(current, raw)
+	edits, err := computeEdits(&current.SiteConfiguration, raw)
 	if err != nil {
 		return errors.Wrap(err, "computeEdits")
 	}
@@ -115,17 +117,19 @@ func (s *Server) Edit(computeEdits func(current *schema.SiteConfiguration, raw s
 
 	return nil
 }
+*/
 
 // Start initalizes the server instance.
 func (s *Server) Start() {
 	s.once.Do(func() {
-		go s.watchDisk()
+		go s.watchSource()
 	})
 }
 
-// watchDisk reloads the configuration file from disk at least every five seconds or whenever
+// watchSource reloads the configuration from the source at least every five seconds or whenever
 // server.Write() is called.
-func (s *Server) watchDisk() {
+func (s *Server) watchSource() {
+	ctx := context.Background()
 	for {
 		jitter := time.Duration(rand.Int63n(5 * int64(time.Second)))
 
@@ -137,9 +141,9 @@ func (s *Server) watchDisk() {
 			// File possibly changed on FS, so check now.
 		}
 
-		err := s.updateFromDisk()
+		err := s.updateFromSource(ctx)
 		if err != nil {
-			log.Printf("failed to read configuration file: %s. Fix your Sourcegraph configuration (%s) to resolve this error. Visit https://docs.sourcegraph.com/ to learn more.", err, s.source.FilePath())
+			log.Printf("failed to read configuration: %s. Fix your Sourcegraph configuration to resolve this error. Visit https://docs.sourcegraph.com/ to learn more.", err)
 		}
 
 		if signalDoneReading != nil {
@@ -148,8 +152,8 @@ func (s *Server) watchDisk() {
 	}
 }
 
-func (s *Server) updateFromDisk() error {
-	rawConfig, err := s.source.Read()
+func (s *Server) updateFromSource(ctx context.Context) error {
+	rawConfig, err := s.Source.Read(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to read configuration")
 	}
@@ -170,7 +174,7 @@ func (s *Server) updateFromDisk() error {
 	}
 
 	// Update global "needs restart" state.
-	if parse.NeedRestartToApply(configChange.Old, configChange.New) {
+	if NeedRestartToApply(configChange.Old, configChange.New) {
 		s.markNeedServerRestart()
 	}
 
@@ -191,10 +195,4 @@ func (s *Server) markNeedServerRestart() {
 	s.needRestartMu.Lock()
 	s.needRestart = true
 	s.needRestartMu.Unlock()
-}
-
-// FilePath is the path to the configuration file, if any.
-// TODO@ggilmore: re-evaluate whether or not we need this
-func (s *Server) FilePath() string {
-	return s.source.FilePath()
 }

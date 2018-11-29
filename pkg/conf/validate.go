@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sourcegraph/sourcegraph/pkg/conf/conftypes"
 	"github.com/sourcegraph/sourcegraph/pkg/jsonc"
 	"github.com/sourcegraph/sourcegraph/schema"
 	"github.com/xeipuuv/gojsonschema"
@@ -44,12 +45,29 @@ var ignoreLegacyKubernetesFields = map[string]struct{}{
 	"useAlertManager":       struct{}{},
 }
 
-// Validate validates the site configuration the JSON Schema and other custom validation
-// checks.
-func Validate(inputStr string) (problems []string, err error) {
+// Validate validates the configuration against the JSON Schema and other
+// custom validation checks.
+func Validate(input conftypes.RawUnified) (problems []string, err error) {
+	coreProblems, err := doValidate(input.Critical, schema.CriticalSchemaJSON)
+	if err != nil {
+		return nil, err
+	}
+	siteProblems, err := doValidate(input.Site, schema.SiteSchemaJSON)
+	if err != nil {
+		return nil, err
+	}
+	return append(coreProblems, siteProblems...), nil
+}
+
+// ValidateSite is like Validate, except it only validates the site configuration.
+func ValidateSite(input string) (problems []string, err error) {
+	return doValidate(input, schema.SiteSchemaJSON)
+}
+
+func doValidate(inputStr, schema string) (problems []string, err error) {
 	input := []byte(jsonc.Normalize(inputStr))
 
-	res, err := validate([]byte(schema.SiteSchemaJSON), input)
+	res, err := validate([]byte(schema), input)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +138,8 @@ func (f jsonLoaderFactory) New(source string) gojsonschema.JSONLoader {
 		return gojsonschema.NewStringLoader(schema.SettingsSchemaJSON)
 	case "site.schema.json":
 		return gojsonschema.NewStringLoader(schema.SiteSchemaJSON)
+	case "critical.schema.json":
+		return gojsonschema.NewStringLoader(schema.CriticalSchemaJSON)
 	}
 	return nil
 }
