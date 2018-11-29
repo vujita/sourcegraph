@@ -35,10 +35,10 @@ func (t testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func TestResolveImportPath(t *testing.T) {
-	conf.Mock(&schema.SiteConfiguration{
+	conf.Mock(&conf.Unified{SiteConfiguration: schema.SiteConfiguration{
 		NoGoGetDomains: "mygitolite.aws.me.org",
 		BlacklistGoGet: []string{"nohttp.google.com"},
-	})
+	}})
 	defer conf.Mock(nil)
 
 	tests := []struct {
