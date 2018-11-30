@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sourcegraph/jsonx"
 	"github.com/sourcegraph/sourcegraph/pkg/conf/conftypes"
 )
 
@@ -56,8 +57,7 @@ func (s *Server) Raw() conftypes.RawUnified {
 
 // Write writes the JSON config file to the config file's path. If the JSON configuration is
 // invalid, an error is returned.
-func (s *Server) Write(input conftypes.RawUnified) error {
-	ctx := context.Background() // TODO(slimsag)
+func (s *Server) Write(ctx context.Context, input conftypes.RawUnified) error {
 	// Parse the configuration so that we can diff it (this also validates it
 	// is proper JSON).
 	_, err := ParseConfig(input)
@@ -80,15 +80,21 @@ func (s *Server) Write(input conftypes.RawUnified) error {
 	return nil
 }
 
-// TODO(slimsag): Unified
-/*
+// Edits describes some JSON edits to apply to site or critical configuration.
+type Edits struct {
+	Site, Critical []jsonx.Edit
+}
+
 // Edit invokes the provided function to compute edits to the site
 // configuration. It then applies and writes them.
 //
 // The computation function is provided the current configuration, which should
 // NEVER be modified in any way. Always copy values.
-func (s *Server) Edit(computeEdits func(current *schema.SiteConfiguration, raw string) ([]jsonx.Edit, error)) error {
-
+//
+// TODO(slimsag): Currently, edits may only be applied via the frontend. It may
+// make sense to allow non-frontend services to apply edits as well. To do this
+// we would need to pipe writes through the frontend's internal httpapi.
+func (s *Server) Edit(ctx context.Context, computeEdits func(current *Unified, raw conftypes.RawUnified) (Edits, error)) error {
 	// TODO@ggilmore: There is a race condition here (also present in the existing library).
 	// Current and raw could be inconsistent. Another thing to offload to configStore?
 	// Snapshot method?
@@ -96,28 +102,33 @@ func (s *Server) Edit(computeEdits func(current *schema.SiteConfiguration, raw s
 	raw := s.store.Raw()
 
 	// Compute edits.
-	edits, err := computeEdits(&current.SiteConfiguration, raw)
+	edits, err := computeEdits(current, raw)
 	if err != nil {
 		return errors.Wrap(err, "computeEdits")
 	}
 
 	// Apply edits and write out new configuration.
-	newConfig, err := jsonx.ApplyEdits(raw, edits...)
+	newCritical, err := jsonx.ApplyEdits(raw.Critical, edits.Critical...)
 	if err != nil {
-		return errors.Wrap(err, "jsonx.ApplyEdits")
+		return errors.Wrap(err, "jsonx.ApplyEdits Critical")
+	}
+	newSite, err := jsonx.ApplyEdits(raw.Site, edits.Site...)
+	if err != nil {
+		return errors.Wrap(err, "jsonx.ApplyEdits Site")
 	}
 
 	// TODO@ggilmore: Another race condition (also present in the existing library). Locks
 	// aren't held between applying the edits and writing the config file,
 	// so the newConfig could be outdated.
-	err = s.Write(newConfig)
+	err = s.Write(ctx, conftypes.RawUnified{
+		Site:     newSite,
+		Critical: newCritical,
+	})
 	if err != nil {
 		return errors.Wrap(err, "conf.Write")
 	}
-
 	return nil
 }
-*/
 
 // Start initalizes the server instance.
 func (s *Server) Start() {

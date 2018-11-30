@@ -154,7 +154,7 @@ func (r *schemaResolver) UpdateSiteConfiguration(ctx context.Context, args *stru
 	}
 	prev := globals.ConfigurationServerFrontendOnly.Raw()
 	prev.Site = args.Input
-	if err := globals.ConfigurationServerFrontendOnly.Write(prev); err != nil {
+	if err := globals.ConfigurationServerFrontendOnly.Write(ctx, prev); err != nil {
 		return false, err
 	}
 	return globals.ConfigurationServerFrontendOnly.NeedServerRestart(), nil
