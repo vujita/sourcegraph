@@ -33,17 +33,17 @@ func printConfigValidation() {
 type configurationSource struct{}
 
 func (c configurationSource) Read(ctx context.Context) (conftypes.RawUnified, error) {
-	criticalFile, err := confdb.CriticalGetLatest(ctx)
+	critical, err := confdb.CriticalGetLatest(ctx)
 	if err != nil {
 		return conftypes.RawUnified{}, errors.Wrap(err, "confdb.CriticalGetLatest")
 	}
-	siteFile, err := confdb.SiteGetLatest(ctx)
+	site, err := confdb.SiteGetLatest(ctx)
 	if err != nil {
 		return conftypes.RawUnified{}, errors.Wrap(err, "confdb.SiteGetLatest")
 	}
 	return conftypes.RawUnified{
-		Critical: criticalFile.Contents,
-		Site:     siteFile.Contents,
+		Critical: critical.Contents,
+		Site:     site.Contents,
 
 		// TODO(slimsag): future: pass GitServers list via this.
 		ServiceConnections: conftypes.ServiceConnections{},
@@ -51,6 +51,23 @@ func (c configurationSource) Read(ctx context.Context) (conftypes.RawUnified, er
 }
 
 func (c configurationSource) Write(ctx context.Context, input conftypes.RawUnified) error {
-	// TODO(slimsag): Unified
-	panic("not implemented")
+	// TODO(slimsag): future: pass lastID through for race prevention
+	critical, err := confdb.CriticalGetLatest(ctx)
+	if err != nil {
+		return errors.Wrap(err, "confdb.CriticalGetLatest")
+	}
+	site, err := confdb.SiteGetLatest(ctx)
+	if err != nil {
+		return errors.Wrap(err, "confdb.SiteGetLatest")
+	}
+
+	_, err = confdb.CriticalCreateIfUpToDate(ctx, critical.ID, input.Critical)
+	if err != nil {
+		return errors.Wrap(err, "confdb.CriticalCreateIfUpToDate")
+	}
+	_, err = confdb.SiteCreateIfUpToDate(ctx, site.ID, input.Site)
+	if err != nil {
+		return errors.Wrap(err, "confdb.SiteCreateIfUpToDate")
+	}
+	return nil
 }
