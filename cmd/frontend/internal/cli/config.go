@@ -61,11 +61,11 @@ func (c configurationSource) Write(ctx context.Context, input conftypes.RawUnifi
 		return errors.Wrap(err, "confdb.SiteGetLatest")
 	}
 
-	_, err = confdb.CriticalCreateIfUpToDate(ctx, critical.ID, input.Critical)
+	_, err = confdb.CriticalCreateIfUpToDate(ctx, &critical.ID, input.Critical)
 	if err != nil {
 		return errors.Wrap(err, "confdb.CriticalCreateIfUpToDate")
 	}
-	_, err = confdb.SiteCreateIfUpToDate(ctx, site.ID, input.Site)
+	_, err = confdb.SiteCreateIfUpToDate(ctx, &site.ID, input.Site)
 	if err != nil {
 		return errors.Wrap(err, "confdb.SiteCreateIfUpToDate")
 	}
