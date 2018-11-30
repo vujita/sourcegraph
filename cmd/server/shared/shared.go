@@ -83,7 +83,7 @@ func Main() {
 		if configPath == "" {
 			configPath = filepath.Join(configDir, "sourcegraph-config.json")
 		}
-		_, err := os.Stat(configPath)
+		_, err = os.Stat(configPath)
 		if err == nil {
 			if err := os.Setenv("SOURCEGRAPH_CONFIG_FILE", configPath); err != nil {
 				log.Fatal(err)
