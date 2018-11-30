@@ -53,5 +53,4 @@ func (c configurationSource) Read(ctx context.Context) (conftypes.RawUnified, er
 func (c configurationSource) Write(ctx context.Context, input conftypes.RawUnified) error {
 	// TODO(slimsag): Unified
 	panic("not implemented")
-	return nil
 }
