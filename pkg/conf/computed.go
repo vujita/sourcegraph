@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sourcegraph/sourcegraph/pkg/conf/confdb"
+	"github.com/sourcegraph/sourcegraph/pkg/conf/confdefaults"
 	"github.com/sourcegraph/sourcegraph/pkg/conf/conftypes"
 	"github.com/sourcegraph/sourcegraph/pkg/env"
 	"github.com/sourcegraph/sourcegraph/pkg/jsonc"
@@ -56,18 +56,18 @@ func init() {
 		}
 	}
 
-	confdb.SetDefaultConfigs(defaultConfig.Critical, defaultConfig.Site)
+	confdefaults.Default = defaultConfig
 }
 
 func defaultConfigForDeployment() conftypes.RawUnified {
 	deployType := DeployType()
 	switch {
 	case IsDev(deployType):
-		return defaultDevAndTestingConfiguration
+		return confdefaults.DevAndTesting
 	case IsDeployTypeDockerContainer(deployType):
-		return defaultDockerContainerConfiguration
+		return confdefaults.DockerContainer
 	case IsDeployTypeCluster(deployType):
-		return defaultClusterConfiguration
+		return confdefaults.Cluster
 	default:
 		panic("deploy type did not register default configuration")
 	}

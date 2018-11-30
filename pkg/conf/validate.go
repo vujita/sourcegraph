@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sourcegraph/sourcegraph/pkg/conf/confdefaults"
 	"github.com/sourcegraph/sourcegraph/pkg/conf/conftypes"
 	"github.com/sourcegraph/sourcegraph/pkg/jsonc"
 	"github.com/sourcegraph/sourcegraph/schema"
@@ -142,4 +143,25 @@ func (f jsonLoaderFactory) New(source string) gojsonschema.JSONLoader {
 		return gojsonschema.NewStringLoader(schema.CriticalSchemaJSON)
 	}
 	return nil
+}
+
+// MustValidateDefaults should be called after all custom validators have been
+// registered. It will panic if any of the default deployment configurations
+// are invalid.
+func MustValidateDefaults() {
+	mustValidate("DevAndTesting", confdefaults.DevAndTesting)
+	mustValidate("DockerContainer", confdefaults.DockerContainer)
+	mustValidate("Cluster", confdefaults.Cluster)
+}
+
+// mustValidate panics if the configuration does not pass validation.
+func mustValidate(name string, cfg conftypes.RawUnified) conftypes.RawUnified {
+	problems, err := Validate(cfg)
+	if err != nil {
+		panic(fmt.Sprintf("Error with %q: %s", name, err))
+	}
+	if len(problems) > 0 {
+		panic(fmt.Sprintf("Problems with %q:\n  %s", name, strings.Join(problems, "\n  ")))
+	}
+	return cfg
 }
