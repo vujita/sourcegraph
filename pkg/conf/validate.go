@@ -161,7 +161,7 @@ func mustValidate(name string, cfg conftypes.RawUnified) conftypes.RawUnified {
 		panic(fmt.Sprintf("Error with %q: %s", name, err))
 	}
 	if len(problems) > 0 {
-		panic(fmt.Sprintf("Problems with %q:\n  %s", name, strings.Join(problems, "\n  ")))
+		panic(fmt.Sprintf("conf: problems with default configuration for %q:\n  %s", name, strings.Join(problems, "\n  ")))
 	}
 	return cfg
 }
