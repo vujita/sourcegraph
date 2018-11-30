@@ -5,6 +5,12 @@ import "github.com/sourcegraph/sourcegraph/pkg/conf/conftypes"
 // TODO(slimsag): validate configs
 
 // TODO(slimsag): Unified
+
+// defaultDevAndTestingConfiguration is the default configuration applied to
+// dev instances of Sourcegraph, as well as what is used by default during
+// Go testing.
+//
+// Tests that wish to use a specific configuration should use conf.Mock.
 var defaultDevAndTestingConfiguration = conftypes.RawUnified{
 	Critical: `{}`,
 	Site:     `{}`,
