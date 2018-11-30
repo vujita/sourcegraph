@@ -50,9 +50,7 @@ var DockerContainer = conftypes.RawUnified{
 			"type": "builtin",
 			"allowSignup": true
 		}
-	],
-	"disablePublicRepoRedirects": true,
-	"maxReposToSearch": 50,
+	]
 }`,
 	Site: `{
 	"disablePublicRepoRedirects": true,

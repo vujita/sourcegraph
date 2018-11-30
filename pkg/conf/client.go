@@ -21,6 +21,11 @@ type client struct {
 
 var defaultClient *client
 
+// Raw returns a copy of the raw configuration.
+func Raw() conftypes.RawUnified {
+	return defaultClient.Raw()
+}
+
 // Get returns a copy of the configuration. The returned value should NEVER be
 // modified.
 //
@@ -39,6 +44,11 @@ var defaultClient *client
 // Get is a wrapper around client.Get.
 func Get() *Unified {
 	return defaultClient.Get()
+}
+
+// Raw returns a copy of the raw configuration.
+func (c *client) Raw() conftypes.RawUnified {
+	return c.store.Raw()
 }
 
 // Get returns a copy of the configuration. The returned value should NEVER be

@@ -53,16 +53,30 @@ func Validate(input conftypes.RawUnified) (problems []string, err error) {
 	if err != nil {
 		return nil, err
 	}
+	problems = append(problems, criticalProblems...)
+
 	siteProblems, err := doValidate(input.Site, schema.SiteSchemaJSON)
 	if err != nil {
 		return nil, err
 	}
-	return append(criticalProblems, siteProblems...), nil
+	problems = append(problems, siteProblems...)
+
+	customProblems, err := validateCustomRaw(conftypes.RawUnified{
+		Critical: string(jsonc.Normalize(input.Critical)),
+		Site:     string(jsonc.Normalize(input.Site)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	problems = append(problems, customProblems...)
+	return problems, nil
 }
 
 // ValidateSite is like Validate, except it only validates the site configuration.
 func ValidateSite(input string) (problems []string, err error) {
-	return doValidate(input, schema.SiteSchemaJSON)
+	raw := Raw()
+	raw.Site = input
+	return Validate(raw)
 }
 
 func doValidate(inputStr, schema string) (problems []string, err error) {
@@ -87,13 +101,6 @@ func doValidate(inputStr, schema string) (problems []string, err error) {
 
 		problems = append(problems, fmt.Sprintf("%s: %s", keyPath, e.Description()))
 	}
-
-	problems2, err := validateCustomRaw(input)
-	if err != nil {
-		return nil, err
-	}
-	problems = append(problems, problems2...)
-
 	return problems, nil
 }
 
