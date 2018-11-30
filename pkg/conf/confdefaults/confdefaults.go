@@ -16,8 +16,15 @@ import (
 //
 // TODO(slimsag): Unified
 var DevAndTesting = conftypes.RawUnified{
-	Critical: `{}`,
-	Site:     `{}`,
+	Critical: `{
+	"auth.providers": [
+		{
+			"type": "builtin",
+			"allowSignup": true
+		}
+	],
+}`,
+	Site: `{}`,
 }
 
 // DockerContainer is the default configuration applied to Docker
@@ -37,8 +44,20 @@ var DevAndTesting = conftypes.RawUnified{
 	}
 */
 var DockerContainer = conftypes.RawUnified{
-	Critical: `{}`,
-	Site:     `{}`,
+	Critical: `{
+	"auth.providers": [
+		{
+			"type": "builtin",
+			"allowSignup": true
+		}
+	],
+	"disablePublicRepoRedirects": true,
+	"maxReposToSearch": 50,
+}`,
+	Site: `{
+	"disablePublicRepoRedirects": true,
+	"maxReposToSearch": 50,
+}`,
 }
 
 // Cluster is the default configuration applied to Cluster instances of
@@ -46,8 +65,15 @@ var DockerContainer = conftypes.RawUnified{
 //
 // TODO(slimsag): Unified
 var Cluster = conftypes.RawUnified{
-	Critical: `{}`,
-	Site:     `{}`,
+	Critical: `{
+	"auth.providers": [
+		{
+			"type": "builtin",
+			"allowSignup": true
+		}
+	],
+}`,
+	Site: `{}`,
 }
 
 // Default is the default for *this* deployment type. It is populated by

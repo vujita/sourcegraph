@@ -49,7 +49,7 @@ var ignoreLegacyKubernetesFields = map[string]struct{}{
 // Validate validates the configuration against the JSON Schema and other
 // custom validation checks.
 func Validate(input conftypes.RawUnified) (problems []string, err error) {
-	coreProblems, err := doValidate(input.Critical, schema.CriticalSchemaJSON)
+	criticalProblems, err := doValidate(input.Critical, schema.CriticalSchemaJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func Validate(input conftypes.RawUnified) (problems []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return append(coreProblems, siteProblems...), nil
+	return append(criticalProblems, siteProblems...), nil
 }
 
 // ValidateSite is like Validate, except it only validates the site configuration.
