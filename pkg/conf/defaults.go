@@ -11,6 +11,19 @@ var defaultDevAndTestingConfiguration = conftypes.RawUnified{
 }
 
 // TODO(slimsag): Unified
+//
+/*
+	// The default site configuration.
+	defaultSiteConfig := schema.SiteConfiguration{
+		// TODO(slimsag): Unified
+		//AuthProviders: []schema.AuthProviders{
+		//	{Builtin: &schema.BuiltinAuthProvider{Type: "builtin"}},
+		//},
+		MaxReposToSearch: 50,
+
+		DisablePublicRepoRedirects: true,
+	}
+*/
 var defaultDockerContainerConfiguration = conftypes.RawUnified{
 	Critical: `{}`,
 	Site:     `{}`,
