@@ -117,6 +117,15 @@ func (r *siteResolver) ProductSubscription() *productSubscriptionStatus {
 
 type siteConfigurationResolver struct{}
 
+func (r *siteConfigurationResolver) ID(ctx context.Context) (int32, error) {
+	// 🚨 SECURITY: The site configuration contains secret tokens and credentials,
+	// so only admins may view it.
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
+		return 0, err
+	}
+	return 0, nil // TODO(slimsag): future: return the real ID here to prevent races
+}
+
 func (r *siteConfigurationResolver) EffectiveContents(ctx context.Context) (string, error) {
 	// 🚨 SECURITY: The site configuration contains secret tokens and credentials,
 	// so only admins may view it.
@@ -145,7 +154,8 @@ func (r *siteConfigurationResolver) Source() string {
 }
 
 func (r *schemaResolver) UpdateSiteConfiguration(ctx context.Context, args *struct {
-	Input string
+	LastID int32
+	Input  string
 }) (bool, error) {
 	// 🚨 SECURITY: The site configuration contains secret tokens and credentials,
 	// so only admins may view it.
@@ -154,6 +164,7 @@ func (r *schemaResolver) UpdateSiteConfiguration(ctx context.Context, args *stru
 	}
 	prev := globals.ConfigurationServerFrontendOnly.Raw()
 	prev.Site = args.Input
+	// TODO(slimsag): future: actually pass lastID through to prevent race conditions
 	if err := globals.ConfigurationServerFrontendOnly.Write(ctx, prev); err != nil {
 		return false, err
 	}
