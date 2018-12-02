@@ -108,3 +108,6 @@ sourcegraph-webapp-*.tgz
 
 # Extensions
 /packages/sourcegraph-extension-api/dist
+
+# Management console
+!cmd/management-console/web/package-lock.json
