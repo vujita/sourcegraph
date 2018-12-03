@@ -111,3 +111,5 @@ sourcegraph-webapp-*.tgz
 
 # Management console
 !cmd/management-console/web/package-lock.json
+cmd/management-console/web/dist
+cmd/management-console/web/.cache
