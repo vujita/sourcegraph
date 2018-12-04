@@ -8,7 +8,13 @@ import 'monaco-editor/esm/vs/editor/contrib/find/findController.js'
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js'
 import 'monaco-editor/esm/vs/language/json/monaco.contribution'
 
-export class MonacoEditor extends React.Component<{}, {}> {
+// TODO(slimsag): future: handle teardown of Monaco properly
+
+interface Props {
+    onContentChange(content: string): void
+}
+
+export class MonacoEditor extends React.Component<Props, {}> {
     private ref: HTMLElement
 
     public constructor(props, state) {
@@ -16,6 +22,28 @@ export class MonacoEditor extends React.Component<{}, {}> {
     }
 
     public componentDidMount(): void {
+        monaco.editor.onDidCreateModel(model => {
+            model.setValue([
+                'from banana import *',
+                '',
+                'class Monkey:',
+                '	# Bananas the monkey can eat.',
+                '	capacity = 10',
+                '	def eat(self, N):',
+                "		'''Make the monkey eat N bananas!'''",
+                '		capacity = capacity - N*banana.size',
+                '',
+                '	def feeding_frenzy(self):',
+                '		eat(9.25)',
+                '		return "Yum yum"',
+            ].join('\n'))
+            monaco.editor.setModelLanguage(model, 'json')
+            model.onDidChangeContent(e => {
+                console.log(model.getValue())
+                this.props.onContentChange(model.getValue())
+            })
+        )
+
         monaco.editor.create(this.ref, {
             lineNumbers: 'off',
             automaticLayout: true,
@@ -40,8 +68,8 @@ export class MonacoEditor extends React.Component<{}, {}> {
     }
 }
 
-self.MonacoEnvironment = {
-    getWorker: function(moduleId, label) {
+(self as any).MonacoEnvironment = {
+    getWorker(moduleId: any, label: string): Worker {
         if (label === 'json') {
             return new Worker('../node_modules/monaco-editor/esm/vs/language/json/json.worker.js')
         }
@@ -61,27 +89,6 @@ self.MonacoEnvironment = {
 monaco.editor.onDidCreateEditor(codeEditor => {
     codeEditor.setValue('hmm')
 })
-
-monaco.editor.onDidCreateModel(model => {
-    model.setValue([
-        'from banana import *',
-        '',
-        'class Monkey:',
-        '	# Bananas the monkey can eat.',
-        '	capacity = 10',
-        '	def eat(self, N):',
-        "		'''Make the monkey eat N bananas!'''",
-        '		capacity = capacity - N*banana.size',
-        '',
-        '	def feeding_frenzy(self):',
-        '		eat(9.25)',
-        '		return "Yum yum"',
-    ].join('\n'))
-    monaco.editor.setModelLanguage(model, 'json')
-    model.onDidChangeContent(e => {
-        console.log(model.getValue())
-    })
-)
 
 monaco.editor.defineTheme('sourcegraph-dark', {
     base: 'vs-dark',
