@@ -21,7 +21,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -64,7 +63,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", serveApp)
+	mux.Handle("/", http.FileServer(web.Assets))
 	mux.HandleFunc("/get", serveCriticalConfigurationGetLatest)
 	mux.HandleFunc("/create", serveCriticalConfigurationCreateIfUpToDate)
 	http.Handle("/", mux)
@@ -76,15 +75,6 @@ func main() {
 	addr := net.JoinHostPort(host, port)
 	log15.Info("management-console: listening", "addr", addr)
 	log.Fatalf("Fatal error serving: %s", http.ListenAndServe(addr, nil))
-}
-
-func serveApp(w http.ResponseWriter, r *http.Request) {
-	logger := log15.New("route", "serveApp")
-
-	f, err := web.Assets.Open(".")
-	_ = f
-	fmt.Fprintf(w, "%v", err)
-	_ = logger
 }
 
 func serveCriticalConfigurationGetLatest(w http.ResponseWriter, r *http.Request) {
