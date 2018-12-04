@@ -1,10 +1,10 @@
 {
-  "name": "helloworld",
+  "name": "management-console",
   "dependencies": {
     "react": "^16.6.3"
   },
   "scripts": {
-    "serve": "./node_modules/.bin/parcel serve src/index.html",
+    "serve": "./node_modules/.bin/parcel serve -p 2680 src/index.html",
     "build": "./node_modules/.bin/parcel build src/index.html"
   },
   "devDependencies": {

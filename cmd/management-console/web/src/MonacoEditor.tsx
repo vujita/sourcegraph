@@ -22,27 +22,8 @@ export class MonacoEditor extends React.Component<Props, {}> {
     }
 
     public componentDidMount(): void {
-        monaco.editor.onDidCreateModel(model => {
-            model.setValue([
-                'from banana import *',
-                '',
-                'class Monkey:',
-                '	# Bananas the monkey can eat.',
-                '	capacity = 10',
-                '	def eat(self, N):',
-                "		'''Make the monkey eat N bananas!'''",
-                '		capacity = capacity - N*banana.size',
-                '',
-                '	def feeding_frenzy(self):',
-                '		eat(9.25)',
-                '		return "Yum yum"',
-            ].join('\n'))
-            monaco.editor.setModelLanguage(model, 'json')
-            model.onDidChangeContent(e => {
-                console.log(model.getValue())
-                this.props.onContentChange(model.getValue())
-            })
-        )
+        monaco.editor.onDidCreateEditor(this.onDidCreateEditor)
+        monaco.editor.onDidCreateModel(this.onDidCreateModel)
 
         monaco.editor.create(this.ref, {
             lineNumbers: 'off',
@@ -63,12 +44,40 @@ export class MonacoEditor extends React.Component<Props, {}> {
         })
     }
 
+    private onDidCreateEditor(editor: monaco.editor.ICodeEditor): void {
+        editor.setValue('hmm')
+    }
+
+    private onDidCreateModel(model: monaco.editor.IModel): void {
+        model.setValue(
+            [
+                'from banana import *',
+                '',
+                'class Monkey:',
+                '	# Bananas the monkey can eat.',
+                '	capacity = 10',
+                '	def eat(self, N):',
+                "		'''Make the monkey eat N bananas!'''",
+                '		capacity = capacity - N*banana.size',
+                '',
+                '	def feeding_frenzy(self):',
+                '		eat(9.25)',
+                '		return "Yum yum"',
+            ].join('\n')
+        )
+        monaco.editor.setModelLanguage(model, 'json')
+        model.onDidChangeContent(e => {
+            console.log(model.getValue())
+            this.props.onContentChange(model.getValue())
+        })
+    }
+
     public render(): JSX.Element | null {
-        return <div className="monaco-editor-container" ref={ref => this.ref = ref} />
+        return <div className="monaco-editor-container" ref={ref => (this.ref = ref)} />
     }
 }
 
-(self as any).MonacoEnvironment = {
+;(self as any).MonacoEnvironment = {
     getWorker(moduleId: any, label: string): Worker {
         if (label === 'json') {
             return new Worker('../node_modules/monaco-editor/esm/vs/language/json/json.worker.js')
