@@ -113,3 +113,4 @@ sourcegraph-webapp-*.tgz
 !cmd/management-console/web/package-lock.json
 cmd/management-console/web/dist
 cmd/management-console/web/.cache
+cmd/management-console/web/assets_vfsdata.go
