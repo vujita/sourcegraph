@@ -13,6 +13,7 @@ const DEBUG_LOADING_STATE_DELAY = 0 // ms
 const WAIT_BEFORE_SHOWING_LOADER = 250 // ms
 
 // TODO(slimsag): future: Show errors that occur during loading
+// TODO(slimsag): future: Show errors that occur during loading
 // TODO(slimsag): future: Show errors that occur during saving
 // TODO(slimsag): future: Warn user if they are discarding changes
 // TODO(slimsag): future: Explicit discard changes button?
@@ -24,7 +25,7 @@ interface Props {}
 
 interface State {
     /** The current config content according to the server. */
-    criticalConfig: string | null
+    criticalConfig: { ID: string; Contents: string } | null
 
     /** The current content in the editor. */
     content: string | null
@@ -57,7 +58,7 @@ export class CriticalConfigEditor extends React.Component<Props, State> {
                 .pipe(delay(DEBUG_LOADING_STATE_DELAY))
                 .subscribe(resp => {
                     this.setState({
-                        criticalConfig: resp.response.Contents,
+                        criticalConfig: resp.response,
                         content: resp.response.Contents,
                     })
                 })
@@ -79,7 +80,7 @@ export class CriticalConfigEditor extends React.Component<Props, State> {
                     {!this.state.criticalConfig && this.state.canShowLoader && <div>Loading...</div>}
                     {this.state.criticalConfig && (
                         <MonacoEditor
-                            content={this.state.criticalConfig}
+                            content={this.state.criticalConfig.Contents}
                             language="json"
                             onDidContentChange={this.onDidContentChange}
                             onDidSave={this.onDidSave}
@@ -94,6 +95,20 @@ export class CriticalConfigEditor extends React.Component<Props, State> {
     private onDidContentChange = (content: string) => this.setState({ content })
 
     private onDidSave = () => {
-        console.log(this.state.content)
+        this.subscriptions.add(
+            ajax({
+                url: '/update',
+                method: 'POST',
+                body: JSON.stringify({
+                    LastID: this.state.criticalConfig.ID,
+                    Contents: this.state.content,
+                }),
+            }).subscribe(resp => {
+                if (resp.status !== 200) {
+                    console.error(resp.status + ' ' + resp.responseText)
+                }
+                alert('Saved successfully!')
+            })
+        )
     }
 }

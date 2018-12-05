@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	log15 "gopkg.in/inconshreveable/log15.v2"
@@ -64,8 +65,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(assets.Assets))
-	mux.HandleFunc("/get", serveCriticalConfigurationGetLatest)
-	mux.HandleFunc("/create", serveCriticalConfigurationCreateIfUpToDate)
+	mux.HandleFunc("/get", serveGet)
+	mux.HandleFunc("/update", serveUpdate)
 	http.Handle("/", mux)
 
 	host := ""
@@ -77,8 +78,8 @@ func main() {
 	log.Fatalf("Fatal error serving: %s", http.ListenAndServe(addr, nil))
 }
 
-func serveCriticalConfigurationGetLatest(w http.ResponseWriter, r *http.Request) {
-	logger := log15.New("route", "serveCriticalConfigurationGetLatest")
+func serveGet(w http.ResponseWriter, r *http.Request) {
+	logger := log15.New("route", "get")
 
 	critical, err := confdb.CriticalGetLatest(r.Context())
 	if err != nil {
@@ -87,22 +88,26 @@ func serveCriticalConfigurationGetLatest(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(critical)
+	err = json.NewEncoder(w).Encode(&struct {
+		ID       string
+		Contents string
+	}{
+		ID:       strconv.Itoa(int(critical.ID)),
+		Contents: critical.Contents,
+	})
 	if err != nil {
 		logger.Error("json response encoding failed", "error", err)
 		http.Error(w, "Error encoding json response.", http.StatusInternalServerError)
 	}
 }
 
-type createIfUpToDateArgs struct {
-	LastID   *int32 `json:"lastID,omitempty"`
-	Contents string `json:"contents"`
-}
+func serveUpdate(w http.ResponseWriter, r *http.Request) {
+	logger := log15.New("route", "update")
 
-func serveCriticalConfigurationCreateIfUpToDate(w http.ResponseWriter, r *http.Request) {
-	logger := log15.New("route", "serveCriticalConfigurationCreateIfUpToDate")
-
-	var args createIfUpToDateArgs
+	var args struct {
+		LastID   string `json:"lastID"`
+		Contents string `json:"contents"`
+	}
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
 		logger.Error("json argument decoding failed", "error", err)
@@ -110,7 +115,15 @@ func serveCriticalConfigurationCreateIfUpToDate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	critical, err := confdb.CriticalCreateIfUpToDate(r.Context(), args.LastID, args.Contents)
+	lastID, err := strconv.Atoi(args.LastID)
+	lastIDInt32 := int32(lastID)
+	if err != nil {
+		logger.Error("argument LastID decoding failed", "error", err)
+		http.Error(w, "Unexpected error when decoding LastID argument.", http.StatusBadRequest)
+		return
+	}
+
+	critical, err := confdb.CriticalCreateIfUpToDate(r.Context(), &lastIDInt32, args.Contents)
 	if err != nil {
 		logger.Error("confdb.CriticalCreateIfUpToDate failed", "error", err)
 		http.Error(w, "Error updating latest critical configuration.", http.StatusInternalServerError)
