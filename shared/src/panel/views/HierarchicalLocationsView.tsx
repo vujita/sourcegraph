@@ -160,8 +160,13 @@ export class HierarchicalLocationsView extends React.PureComponent<Props, State>
             <div className={`hierarchical-locations-view ${this.props.className || ''}`}>
                 {selectedGroups &&
                     GROUPS.map(
-                        ({ name, defaultSize }, i) =>
-                            ((groupByFile && name === 'file') || groups[i].length > 1) && (
+                        ({ name, defaultSize, key }, i) =>
+                            groups[i] &&
+                            ((groupByFile && name === 'file') ||
+                                (groups[i].length === 1 &&
+                                    (selectedGroups[i] !== groups[i][0].key ||
+                                        key({ uri: this.props.defaultGroup }) !== selectedGroups[i])) ||
+                                groups[i].length > 1) && (
                                 <Resizable
                                     key={i}
                                     className="hierarchical-locations-view__resizable"
