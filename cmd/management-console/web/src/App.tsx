@@ -1,24 +1,18 @@
 import * as React from 'react'
-import { MonacoEditor } from './MonacoEditor'
+import './App.scss'
+import { CriticalConfigEditor } from './CriticalConfigEditor'
 
-interface State {
-    content: string
-}
-
-export class App extends React.Component<{}, State> {
+export class App extends React.Component<{}, {}> {
     public render(): JSX.Element | null {
         return (
             <div>
-                <h1>Management console</h1>
-                <MonacoEditor onContentChange={this.onContentChange} />
-                <button onClick={this.onSaveChanges}>Save changes</button>
+                <h1 className="app__title">Sourcegraph management console</h1>
+                <p className="app__subtitle">
+                    View and edit critical Sourcegraph configuration. See <a href="TODO">documentation</a> for more
+                    information.
+                </p>
+                <CriticalConfigEditor />
             </div>
         )
-    }
-
-    private onContentChange = content => this.setState({ content })
-
-    private onSaveChanges = ev => {
-        console.log(this.state.content)
     }
 }
