@@ -70,7 +70,7 @@ export class ExtConfiguration<C extends object> implements ExtConfigurationAPI<C
         return Object.freeze(new ExtConfigurationSection<C>(this.proxy, this.getData().value.final))
     }
 
-    public subscribe(next: () => void): sourcegraph.Unsubscribable {
-        return this.getData().subscribe(next)
+    public subscribe(...args: any[]): sourcegraph.Unsubscribable {
+        return this.getData().subscribe(...args)
     }
 }
