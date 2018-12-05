@@ -1,0 +1,20 @@
+//go:generate bash -c "cd ../web && npm run build"
+//go:generate cp ../../../ui/assets/img/favicon.png .
+//go:generate vfsgendev -source="github.com/sourcegraph/sourcegraph/cmd/management-console/assets".Assets
+
+package web
+
+import (
+	"net/http"
+	"os"
+	"path/filepath"
+)
+
+// Assets contains the bundled web assets
+var Assets http.FileSystem = http.Dir(".")
+
+func init() {
+	if projectRoot := os.Getenv("PROJECT_ROOT"); projectRoot != "" {
+		Assets = http.Dir(filepath.Join(projectRoot, "assets"))
+	}
+}

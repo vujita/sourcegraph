@@ -111,6 +111,11 @@ sourcegraph-webapp-*.tgz
 
 # Management console
 !cmd/management-console/web/package-lock.json
-cmd/management-console/web/dist
+cmd/management-console/assets/*.go
+cmd/management-console/assets/*.map
+cmd/management-console/assets/*.js
+cmd/management-console/assets/*.css
+cmd/management-console/assets/*.html
+cmd/management-console/assets/favicon.png
 cmd/management-console/web/.cache
-cmd/management-console/web/assets_vfsdata.go
+cmd/management-console/assets/assets_vfsdata.go

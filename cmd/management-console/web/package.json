@@ -5,8 +5,8 @@
     "rxjs": "^6.3.3"
   },
   "scripts": {
-    "serve": "./node_modules/.bin/parcel serve -p 2680 src/index.html",
-    "build": "./node_modules/.bin/parcel build src/index.html"
+    "serve": "./node_modules/.bin/parcel serve --out-dir=../assets -p 2680 src/index.html",
+    "build": "./node_modules/.bin/parcel build --out-dir=../assets src/index.html"
   },
   "devDependencies": {
     "monaco-editor": "^0.14.3",
