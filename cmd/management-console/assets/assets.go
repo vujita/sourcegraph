@@ -2,7 +2,7 @@
 //go:generate cp ../../../ui/assets/img/favicon.png .
 //go:generate vfsgendev -source="github.com/sourcegraph/sourcegraph/cmd/management-console/assets".Assets
 
-package web
+package assets
 
 import (
 	"net/http"

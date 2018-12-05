@@ -30,7 +30,7 @@ import (
 
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
-	"github.com/sourcegraph/sourcegraph/cmd/management-console/web"
+	"github.com/sourcegraph/sourcegraph/cmd/management-console/assets"
 	"github.com/sourcegraph/sourcegraph/pkg/conf/confdb"
 	"github.com/sourcegraph/sourcegraph/pkg/dbconn"
 	"github.com/sourcegraph/sourcegraph/pkg/debugserver"
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(web.Assets))
+	mux.Handle("/", http.FileServer(assets.Assets))
 	mux.HandleFunc("/get", serveCriticalConfigurationGetLatest)
 	mux.HandleFunc("/create", serveCriticalConfigurationCreateIfUpToDate)
 	http.Handle("/", mux)
